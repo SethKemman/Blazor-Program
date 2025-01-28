@@ -1,0 +1,87 @@
+﻿@page "/accommodations/{id}"
+@using Microsoft.EntityFrameworkCore
+@using BlazorProject
+@using BlazorProject.Data
+@inject AppDbContext _AppDbContext
+@inject NavigationManager _nav
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+@if (accommodation == null)
+{
+    <PageTitle>Accommodatie</PageTitle>
+}
+else
+{
+    <PageTitle>@accommodation.Name</PageTitle>
+}
+
+
+@if (accommodation == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Location</th>
+                @foreach(var prop in propertyset) {
+                    <th>@prop.Name</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            <td>@accommodation.Name</td>
+            <td>@accommodation.Description</td>
+            <td>@accommodation.Price</td>
+            <td>@location.City, @location.Country</td>
+            @foreach (var property in properties)
+            {
+            <td>@property.Value</td>
+            }
+        </tbody>
+    </table>
+
+    <button @onclick="Redirect" style="btn btn-primary">Book</button>
+}
+
+@code {
+    private BlazorProject.Data.Accommodation? accommodation;
+    private BlazorProject.Data.Location? location;
+    private List<BlazorProject.Data.PropertySet> propertyset;
+    private List<BlazorProject.Data.Property> properties;
+
+    [Parameter] public string? Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        accommodation = await _AppDbContext.Accommodations.FirstOrDefaultAsync(accommodation => accommodation.AccommodationId == Convert.ToInt32(Id));
+        location = await _AppDbContext.Locations.FirstOrDefaultAsync(location => location.LocationId == Convert.ToInt32(accommodation.LocationId));
+        propertyset = await _AppDbContext.PropertySets.ToListAsync();
+        properties = await _AppDbContext.Properties.Where(p => p.AccommodationId == accommodation.AccommodationId).ToListAsync();
+
+
+    }
+
+    private void Redirect()
+    {
+        Console.WriteLine("Attempting redirect.");
+
+        _nav.NavigateTo($"/bookingsCreate/{accommodation.AccommodationId}");
+
+
+
+
+
+
+    }
+
+
+}

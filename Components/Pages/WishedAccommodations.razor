@@ -1,0 +1,116 @@
+﻿@page "/WishedAccommodations"
+@using Microsoft.EntityFrameworkCore
+@using BlazorProject
+@using BlazorProject.Data
+@inject AppDbContext _AppDbContext
+@inject NavigationManager _nav
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+<PageTitle>Geschikte accommodaties</PageTitle>
+
+<h1>Geschikte accommodaties</h1>
+
+@if (accommodations == null)
+{
+	<p>
+		<em>Loading...</em>
+	</p>
+}
+else {
+	<input class="form-control" type="number" @bind="CustomerId" />
+	<button class="btn btn-primary" @onclick="FilterAcc">Filter</button>
+	<table class="table">
+		<thead>
+			<tr>
+				<th>GebruikersId</th>
+				<th>Accommodatie</th>
+				<th>Prijs</th>
+				<th>Id</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var accommodation in validAccommodations)
+			{
+				<tr @onclick="() => OnRowClicked(accommodation)">
+					<td>@CustomerId</td>
+					<td>@accommodation.Name</td>
+					<td>@accommodation.Price</td>
+					<td>@accommodation.AccommodationId</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+
+}
+
+
+@code {
+	private BlazorProject.Data.Accommodation[]? accommodations;
+	private BlazorProject.Data.Property[]? properties;
+	private BlazorProject.Data.PropertySet[]? propertySets;
+	private BlazorProject.Data.Wish[]? wishes;
+
+
+
+	//setup for testing
+	public int CustomerId = 0;
+
+	public List<Accommodation> validAccommodations = new List<Accommodation>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		accommodations = _AppDbContext.Accommodations.ToArray();
+		properties = _AppDbContext.Properties.ToArray();
+		propertySets = _AppDbContext.PropertySets.ToArray();
+		wishes = _AppDbContext.Wishes.ToArray();
+
+
+	
+	}
+
+	private void FilterAcc() {
+		validAccommodations.Clear();
+		List<Wish> validWishes = new List<Wish>();
+		validWishes = wishes.Where(wish => wish.CustomerId == CustomerId).ToList();
+
+		foreach (var accommodation in accommodations)
+		{
+
+
+			int matchingWishes = 0;
+
+			foreach (var wish in validWishes)
+			{
+				List<Property> validProps = new List<Property>();
+				validProps = properties.Where(p => p.AccommodationId == accommodation.AccommodationId).ToList();
+
+				foreach (var prop in validProps)
+				{
+					if (prop.AccommodationId == accommodation.AccommodationId && prop.PropertySetId == wish.PropertySetId && prop.Value == wish.Value)
+					{
+						matchingWishes++;
+					}
+
+
+				}
+			}
+
+			if (matchingWishes == validWishes.Count)
+			{
+				validAccommodations.Add(accommodation);
+			}
+		}
+	}
+	private void OnRowClicked(BlazorProject.Data.Accommodation accommodation)
+	{
+		Console.WriteLine(accommodation.Name);
+		_nav.NavigateTo($"/accommodations/{@accommodation.AccommodationId}");
+
+
+
+
+
+
+	}
+}

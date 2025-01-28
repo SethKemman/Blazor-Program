@@ -1,0 +1,115 @@
+﻿@page "/bookingsCreate/{id}"
+@using Microsoft.EntityFrameworkCore
+@using BlazorProject
+@using BlazorProject.Data
+@inject AppDbContext _AppDbContext
+@inject NavigationManager _nav
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+<PageTitle>Boekingen</PageTitle>
+
+<h1>Een boeking maken</h1>
+
+@if (accommodation == null)
+{
+    <PageTitle>Accommodatie</PageTitle>
+}
+else
+{
+    <PageTitle>@accommodation.Name</PageTitle>
+}
+
+@if (accommodation == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else {
+    <EditForm Model="@newBooking" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div>
+            <label>Accommodatie</label>
+            <p class="form-control" style="color: lightgray">@accommodation.Name</p>
+
+        </div>
+
+
+        <div>
+            <label>CustomerId</label>
+            <InputNumber @bind-Value="newBooking.CustomerId" class="form-control" />
+        </div>
+
+        <div>
+            <label>Datum van aankomst</label>
+            <InputDate @bind-Value="newBooking.ArrivalDate" class="form-control" />
+        </div>
+
+        <div>
+            <label>Datum van vertrek</label>
+            <InputDate @bind-Value="newBooking.DepartureDate" class="form-control" />
+        </div>
+
+        <div>
+            <label>Aantal gasten</label>
+            <InputNumber @bind-Value="newBooking.NumberOfGuests" class="form-control" />
+        </div>
+
+
+
+        <button type="submit" class="btn btn-primary">Save</button>
+
+    </EditForm>
+    <p>@PriceHere</p>
+
+    <button class="btn btn-primary" @onclick=CalcPrice>Calculate costs</button>
+
+    <p>Note: Customer ids range from 3-104 for testing. If this goes into production the database will be reset.</p>
+}
+
+
+
+
+@code {
+
+    private Booking newBooking = new();
+
+    private BlazorProject.Data.Accommodation? accommodation;
+    private BlazorProject.Data.Location? location;
+
+
+
+    [Parameter] public string? Id { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        // Set up 
+        newBooking.AccommodationId = accommodation.AccommodationId;
+        double days = (newBooking.DepartureDate - newBooking.ArrivalDate).TotalDays;
+        newBooking.TotalPrice = Convert.ToDecimal(days * Convert.ToDouble(accommodation.Price) * Convert.ToDouble(newBooking.NumberOfGuests));
+
+        // Save new booking to the database
+        _AppDbContext.Bookings.Add(newBooking);
+        await _AppDbContext.SaveChangesAsync();
+
+        // Redirect back to the bookings page
+        _nav.NavigateTo("/bookings");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        accommodation = await _AppDbContext.Accommodations.FirstOrDefaultAsync(accommodation => accommodation.AccommodationId == Convert.ToInt32(Id));
+        location = await _AppDbContext.Locations.FirstOrDefaultAsync(location => location.LocationId == Convert.ToInt32(accommodation.LocationId));
+
+
+    }
+    string? PriceHere;
+    private void CalcPrice() {
+        double days = (newBooking.DepartureDate - newBooking.ArrivalDate).TotalDays;
+        decimal TotalPrice = Convert.ToDecimal(days * Convert.ToDouble(accommodation.Price) * Convert.ToDouble(newBooking.NumberOfGuests));
+        PriceHere = Convert.ToString(TotalPrice);
+    }
+
+}

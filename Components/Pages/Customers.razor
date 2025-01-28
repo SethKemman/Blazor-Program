@@ -1,0 +1,63 @@
+﻿@page "/customers"
+@using Microsoft.EntityFrameworkCore
+@using BlazorProject
+@using BlazorProject.Data
+@inject NavigationManager NavigationManager
+@inject AppDbContext _AppDbContext
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+<PageTitle>Gebruikers</PageTitle>
+
+<h1>Gebruikers</h1>
+
+
+@if (customers == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <button class="btn btn-primary" @onclick="Redirect">Add customer</button>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Phone number</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in customers)
+            {
+                <tr>
+                    <td>@customer.CustomerId</td>
+                    <td>@customer.FirstName</td>
+                    <td>@customer.LastName</td>
+                    <td>@customer.Email</td>
+                    <td>@customer.PhoneNumber</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private BlazorProject.Data.Customer[]? customers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        customers = _AppDbContext.Customers.ToArray();
+    }
+
+
+    private void Redirect() {
+        NavigationManager.NavigateTo("/customersCreate");
+    }
+
+}
+

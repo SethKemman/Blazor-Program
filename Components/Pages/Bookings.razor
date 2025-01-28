@@ -1,0 +1,66 @@
+﻿@page "/bookings"
+@using Microsoft.EntityFrameworkCore
+@using BlazorProject
+@using BlazorProject.Data
+@inject AppDbContext _AppDbContext
+@inject NavigationManager _nav
+@attribute [StreamRendering]
+
+<PageTitle>Boekingen</PageTitle>
+
+<h1>Boekingen</h1>
+
+
+@if (bookings == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Booking date</th>
+                <th>Arrival date</th>
+                <th>Departure date</th>
+                <th>Number of guests</th>
+                <th>Total price</th>
+                <th>Customer Id</th>
+                <th>Accommodation Id</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var booking in bookings)
+            {
+                <tr>
+                    <td>@booking.BookingId</td>
+                    <td>@booking.BookingDate</td>
+                    <td>@booking.ArrivalDate</td>
+                    <td>@booking.DepartureDate</td>
+                    <td>@booking.NumberOfGuests</td>
+                    <td>@booking.TotalPrice</td>
+                    <td>@booking.CustomerId</td>
+                    <td>@booking.AccommodationId</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
+
+@code {
+    private BlazorProject.Data.Booking[]? bookings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        bookings = _AppDbContext.Bookings.ToArray();
+    }
+
+
+
+
+}
+

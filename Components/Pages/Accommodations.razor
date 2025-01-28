@@ -1,0 +1,69 @@
+﻿@page "/accommodations"
+@using Microsoft.EntityFrameworkCore
+@using BlazorProject
+@using BlazorProject.Data
+@inject AppDbContext _AppDbContext
+@inject NavigationManager _nav
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+<PageTitle>Accommodaties</PageTitle>
+
+<h1>Accommodaties</h1>
+
+
+@if (accommodations == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var accommodation in accommodations)
+            {
+                <tr @onclick="() => OnRowClicked(accommodation)">
+                    <td>@accommodation.Name</td>
+                    <td>@accommodation.Description</td>
+                    <td>@accommodation.Price</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private BlazorProject.Data.Accommodation[]? accommodations;
+
+    string? myStyle { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        accommodations = _AppDbContext.Accommodations.ToArray();
+    }
+
+    private void OnRowClicked(BlazorProject.Data.Accommodation accommodation)
+    {
+        Console.WriteLine(accommodation.Name);
+        _nav.NavigateTo($"/accommodations/{@accommodation.AccommodationId}");
+
+
+
+
+
+
+    }
+
+
+
+}
+
