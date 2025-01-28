@@ -13,14 +13,25 @@ public class Program
         // Add services to the container.
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents();
-        
+
+
         // Add database context
-        builder.Services.AddDbContext<NewsContext>(options =>
-            options.UseMySql("Server=localhost; User ID=root; Database=newsapp",
-                ServerVersion.AutoDetect("Server=localhost; User ID=root; Database=newsapp")));
-        
-        
+        builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseMySql(
+            "Server=localhost;User ID=root;Password=root;Database=application;",
+            ServerVersion.AutoDetect("Server=localhost;User ID=root;Password=root;Database=application")
+        )
+
+    );
+
+
         var app = builder.Build();
+
+        // Initialize database with seed data
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        }
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())

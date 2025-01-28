@@ -1,64 +1,148 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.DataAnnotations;
 
 namespace BlazorProject.Data;
 
-public class NewsContext : DbContext
+public class AppDbContext : DbContext
 {
-    public DbSet<Author> Authors { get; set; }
-    public DbSet<Tag> Tags { get; set; }
-    public DbSet<Article> Articles { get; set; }
+    public DbSet<Customer> Customers { get; set; }
+    public DbSet<Booking> Bookings { get; set; }
+    public DbSet<Wish> Wishes { get; set; }
+    public DbSet<Accommodation> Accommodations { get; set; }
+    public DbSet<Location> Locations { get; set; }
+    public DbSet<Property> Properties { get; set; }
+    public DbSet<PropertySet> PropertySets { get; set; }
+
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        //modelBuilder.Entity<Customer>().HasData(Seed.Customers);
+        //modelBuilder.Entity<Location>().HasData(Seed.Locations);
+        //modelBuilder.Entity<PropertySet>().HasData(Seed.PropertySets);
+        //modelBuilder.Entity<Accommodation>().HasData(Seed.Accommodations);
+        //modelBuilder.Entity<Booking>().HasData(Seed.Bookings);
+        //modelBuilder.Entity<Wish>().HasData(Seed.Wishes);
+        //modelBuilder.Entity<Property>().HasData(Seed.Properties);
+    }
+}
+
+public class Customer
+{
+    public int CustomerId { get; set; }
     
-    public NewsContext(DbContextOptions<NewsContext> options) : base(options)
-    {
-    }
+    [Required(ErrorMessage = "Voornaam is vereist.")]
+    [StringLength(50, ErrorMessage = "Voornaam mag niet langer dan 50 karakters zijn.")]
+    public string FirstName { get; set; }
+    [Required(ErrorMessage = "Achternaam is vereist.")]
+    [StringLength(50, ErrorMessage = "Achternaam mag niet langer dan 50 karakters zijn.")]
+    public string LastName { get; set; }
+    [Required(ErrorMessage = "Email is vereist.")]
+    [EmailAddress(ErrorMessage = "Ongeldig e-mailadres.")]
+    public string Email { get; set; }
+    [Required(ErrorMessage = "Telefoonnummer is vereist.")]
+    [Phone(ErrorMessage = "Ongeldig telefoonnummer.")]
+    [MinLength(5, ErrorMessage ="Ongeldig telefoonnummer.")]
+    public string PhoneNumber { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder.UseSeeding((context, _) =>
-        {
-            Console.WriteLine("❗ Seeding Database");
-            var testArticle = context.Set<Article>().FirstOrDefault();
-            if (testArticle == null)
-            {
-                Console.WriteLine("❗ Seeding Database II");
-                context.Set<Author>().AddRange(Seed.Authors);
-                context.Set<Tag>().AddRange(Seed.Tags);
-                context.Set<Article>().AddRange(Seed.Articles);
-                context.SaveChanges();
-            }
-            else
-            {
-                Console.WriteLine("❗ Weird Sh*t");
-            }
-        });
-        
-        base.OnConfiguring(optionsBuilder);
-    }
+    public List<Booking> Bookings { get; set; }
+    public List<Wish> Wishes { get; set; }
 }
 
-public class Article
+public class Booking
 {
-    public int ArticleId { get; set; }
-    public string Title { get; set; }
-    public string Content { get; set; }
-    public DateTime PublishDate { get; set; }
-        
-    public Author Author { get; set; }
-    public List<Tag> Tags { get; set; }
+    public int BookingId { get; set; }
+    public DateTime BookingDate { get; set; }
+
+    [Required(ErrorMessage = "Datum van aankomst is vereist.")]
+
+    public DateTime ArrivalDate { get; set; }
+
+    [Required(ErrorMessage = "Datum van vertrek is vereist.")]
+    public DateTime DepartureDate { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Minstens 1 gast is vereist.")]
+    public int NumberOfGuests { get; set; }
+
+    public decimal TotalPrice { get; set; }
+
+    public int CustomerId { get; set; }
+    public Customer Customer { get; set; }
+
+    public int AccommodationId { get; set; }
+    public Accommodation Accommodation { get; set; }
 }
 
-public class Author
+
+
+public class Wish
 {
-    public int AuthorId { get; set; }
+    public int WishId { get; set; }
+    public string Value { get; set; }
+
+    public int PropertySetId { get; set; }
+
+    public int CustomerId { get; set; }
+    public Customer Customer { get; set; }
+
+    public PropertySet PropertySet { get; set; }
+}
+
+public class Accommodation
+{
+    public int AccommodationId { get; set; }
+
+    [Required(ErrorMessage = "Naam is vereist.")]
+    [StringLength(100, ErrorMessage = "Naam mag niet langer zijn dan 100 karakters.")]
     public string Name { get; set; }
-        
-    public List<Article> Articles { get; set; }
+
+    public string Description { get; set; }
+
+    [Required(ErrorMessage = "Prijs is vereist.")]
+    [Range(0, double.MaxValue, ErrorMessage = "Prijs moet een positief getal zijn.")]
+    public decimal Price { get; set; }
+
+    public string? ImageURL { get; set; }  // Make ImageURL nullable
+
+    [Required(ErrorMessage = "Location is required.")]
+    public int LocationId { get; set; }
+
+    // Navigation properties
+    public Location Location { get; set; }
+
+    public List<Booking> Bookings { get; set; }
+    public List<Property> Properties { get; set; }
 }
 
-public class Tag
+
+public class Location
 {
-    public int TagId { get; set; }
-    public string TagName { get; set; }
-        
-    public List<Article> Articles { get; set; }
+    public int LocationId { get; set; }
+    public string City { get; set; }
+    public string Province { get; set; }
+    public string Country { get; set; }
+
+    public List<Accommodation> Accommodations { get; set; }
+}
+
+public class Property
+{
+    public int Id { get; set; } // Primary key
+    public int AccommodationId { get; set; }
+    public Accommodation Accommodation { get; set; }
+    public int PropertySetId { get; set; }
+    public PropertySet PropertySet { get; set; }
+    public string Value { get; set; }
+}
+
+
+public class PropertySet
+{
+    public int PropertySetId { get; set; }
+    public string Name { get; set; }
+
+    public List<Property> Properties { get; set; }
 }
